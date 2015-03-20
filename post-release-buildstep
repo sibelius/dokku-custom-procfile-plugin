@@ -8,10 +8,19 @@ source "$(dirname $0)/../common/functions"
 APP="$1"
 IMAGE="dokku/$APP"
 
-echo "----> $PROCFILE"
+dokku_log_info1 "Custom Procfile plugin"
+
+# get procfile env var
+PROCFILE=$(dokku config:get $APP PROCFILE)
+
+CMD=$(cat << EOF
+cd "/app" &&
+echo "$PROCFILE" > Procfile
+EOF
+)
 
 dokku_log_info1 "Customizing Procfile"
-id=$(docker run -d $IMAGE /bin/bash -c "cd /app && gulp default")
+id=$(docker run -d $IMAGE /bin/bash -c "$CMD")
 test $(docker wait $id) -eq 0
 docker commit $id $IMAGE > /dev/null
 dokku_log_info1 "New Procfile ready"
